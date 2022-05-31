@@ -2,7 +2,7 @@ import express from "express";
 import cors from 'cors';
 import db from "./database/db.js";
 import employeeRoutes from "./routes/routes.js"
-var multer = require('multer');
+import multer from 'multer';
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads')

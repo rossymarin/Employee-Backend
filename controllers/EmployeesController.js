@@ -24,6 +24,17 @@ export const getEmployee = async (req, res) => {
     }
 }
 
+export const importEmployee = async (req, res) => {
+    try {
+        await EmployeesModel.create(req.body)
+        res.json({
+            "message":"Registro completo"
+        })
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
 //crear registro
 export const createEmployee = async (req, res) => {
     try {
@@ -63,7 +74,7 @@ export const deleteEmployee = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-export const saveDirectory = async(){
+export const saveDirectory = async() => {
   try{
       if(req.file){
       const excel = xlsx.readFile(req.file);
