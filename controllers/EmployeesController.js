@@ -1,4 +1,6 @@
 import EmployeesModel from "../models/EmployeesModel.js";
+import csv from 'csvtojson'
+import xlsx from 'xlsx'
 
 //Metodo crud
 
@@ -74,56 +76,130 @@ export const deleteEmployee = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-export const importEmployees = async () =>{
-        const fileName = "example-employees.csv";
 
-        csv().fromFile(fileName).then(source => {
-            for (var i = 0; i < source.length; i++) {
-                var nomina = source[i]["nomina"],
-                    nombre = source[i]["nombre"],
-                    puesto = source[i]["puesto"],
-                    ubicacion = source[i]["ubicacion"],
-                    correo = source[i]["correo"],
-                    telefono = source[i]["telefono"],
-                    extension = source[i]["extension"],
-                    status = source[i]["status"],
-                    jubilado = source[i]["jubilado"],
-                    correop = source[i]["correop"],
-                    telefonop = source[i]["telefonop"],
-                    foto = source[i]["foto"]
-                    
-                    if(nomina.length===0){nomina="!"}
-                    if(nombre.length===0){ nombre="!"}
-                    if(puesto.length===0){puesto="!"}
-                    if(ubicacion.length===0){ubicacion="!"}
-                    if(correo.length===0){ correo="!"}
-                    if(telefono.length===0){ telefono="!" }
-                    if(extension.length===0){ extension="!" }
-                    if(status.length===0){ status="!" }
-                    if(jubilado.length===0){ jubilado="no" }
-                    if(telefonop.length===0){ telefonop="!" }
-                    if(correop.length===0){ correop="!"}
-                    if(foto.length===0){ foto="!" }
-
-                    if(nomina==="!" && nombre==="!" && puesto==="!" && ubicacion==="!" && correo==="!" && telefono==="!" && extension==="!" && status==="!" && correop==="!" && telefonop==="!" && foto==="!"){
-                        console.log("Campos vaciosssss")
-                    }else{
-                        if (jubilado==="X") {
-                            jubilado = "si"
-                        }
-                        var insertStatement = `INSERT INTO empleados values(null,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                        var items = [nomina, nombre, puesto, ubicacion, correo, telefono, extension, status, jubilado, correop, telefonop, foto];
-                        
-                        try {
-        await EmployeesModel.create(insertStatement,items)
-        console.log("insertado")
-    } catch (error) {
-        console.log("error")
-    }
-                    }
-            }  
-        });
-     res.json({
-            "message":"Registro completo"
+export const status = async (req, res) => {
+    try {
+        const activos = await EmployeesModel.count({
+            where: {status: "ACTIVE"}
         })
-    } 
+        console.log(typeof activos)
+        res.json(activos)
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
+export const inactivos = async (req, res) => {
+    try {
+        const activos = await EmployeesModel.count({
+            where: {
+                status: "INACTIVE",
+                jubilado: "si"
+            }
+        })
+        console.log(typeof activos)
+        res.json(activos)
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
+export const despedidos = async (req, res) => {
+    try {
+        const activos = await EmployeesModel.count({
+            where: {
+                status: "INACTIVE",
+                jubilado: "no"
+            }
+        })
+        console.log(typeof activos)
+        res.json(activos)
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
+export const importEmployees = async (req, res) =>{
+        const fileName = "C:/Users/rosym/OneDrive/Documentos/Tec/8/Ingenieria de Datos/Employee-Management/employee-backend/controllers/example-employees.csv";
+        console.log("file")
+        const excel = xlsx.readFile(fileName);
+        const sheetNames = excel.SheetNames;
+        const totalSheets = sheetNames.length;
+        let parsedData = [];
+            for (let i = 0; i < totalSheets; i++) {
+                const tempData = xlsx.utils.sheet_to_json(excel.Sheets[sheetNames[i]]);
+                tempData.shift();
+                parsedData.push(...tempData);
+            }
+            for (let employee of parsedData){
+                if(employee.nomina && employee.nomina.length==0){
+                    employee.nomina="!"
+                }
+                if(employee.nombre && employee.nombre.length==0){
+                    employee.nombre="!"
+                }
+                if(employee.puesto && employee.puesto.length==0){
+                    employee.puesto="!"
+                }
+                if(employee.ubicacion && employee.ubicacion.length==0){
+                    employee.ubicacion="!"
+                }
+                if(employee.correo && employee.correo.length==0){
+                    employee.correo="!"
+                }
+                if(employee.telefono && employee.telefono.length==0){
+                    employee.telefono="!"
+                }
+                if(employee.extension && employee.extension.length==0){
+                    employee.extension="!"
+                }
+                if(employee.status && employee.status.length==0){
+                    employee.status="!"
+                }
+                if(employee.jubilado && employee.jubilado.length==0){
+                    employee.jubilado="no"
+                }
+                if(employee.telefonop && employee.telefonop.length==0){
+                    employee.telefonop="!"
+                }
+                if(employee.correop && employee.correop.length==0){
+                    employee.correop="!"
+                }
+                if(employee.foto && employee.foto.length==0){
+                    employee.foto="!"
+                }
+                if(employee.nomina=="!" && employee.nombre=="!" && employee.puesto=="!" && employee.ubicacion=="!" && employee.correo=="!" && employee.telefono=="!" && employee.extension=="!" && employee.status=="!" && employee.jubilado=="no" && employee.correop=="!" && employee.telefonop=="!" && employee.foto=="!"){
+                    console.log("Campos vaciosssss")
+                }else{
+                    var insertStatement = `INSERT INTO empleados values(null,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    var items = [employee.nomina, employee.nombre, employee.puesto, employee.ubicacion, employee.correo, employee.telefono, employee.extension, employee.status, employee.jubilado==="X" ? employee.jubilado = "si" : employee.jubilado="no", employee.correop, employee.telefonop, employee.foto];
+                    console.log(employee)
+                    
+                    try {
+                
+                        await EmployeesModel.create({
+                            nomina: employee.nomina, 
+                            nombre: employee.nombre, 
+                            puesto: employee.puesto, 
+                            ubicacion: employee.ubicacion,  
+                            correo: employee.correo,
+                            telefono: employee.telefono,
+                            extension: employee.extension,
+                            status: employee.status,
+                            jubilado: employee.jubilado,
+                            correop: employee.correop,
+                            telefonop: employee.telefonop,
+                            foto: employee.foto,
+                        })
+                        
+                        
+                    } catch (error) {
+                        res.json({ message: error.message });
+                    }
+                }
+                
+       
+            }
+            res.json({message: "exito"})
+           
+} 
